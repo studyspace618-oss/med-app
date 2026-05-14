@@ -133,7 +133,11 @@
                 evening: document.getElementById('e-check').checked
             }
         };
-        await fetch(API, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
+        await fetch('https://medtrak.onrender.com/medicines', { 
+    method: 'POST', 
+    headers: {'Content-Type': 'application/json'}, 
+    body: JSON.stringify(data) 
+});
         document.getElementById('medForm').reset();
         loadMeds();
     };
