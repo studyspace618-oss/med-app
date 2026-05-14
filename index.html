@@ -68,49 +68,52 @@
 </div>
 
 <script>
-    const API = "https://medtrak.onrender.com";
+    // 1. Corrected API URL (always use the /medicines path for your endpoints)
+    const API = "https://medtrak.onrender.com/medicines";
 
     async function loadMeds() {
-       fetch('https://medtrak.onrender.com/medicines')
-        const meds = await res.json();
-        const container = document.getElementById('medList');
-        
-        let mTotal = 0, mDone = 0, nTotal = 0, nDone = 0, eTotal = 0, eDone = 0;
-
-        container.innerHTML = meds.length === 0 ? '<p class="text-center text-muted">No medicines added.</p>' : '';
-
-        meds.forEach(m => {
-            // Count stats for progress bars
-            if(m.slots.morning.required) { mTotal++; if(m.slots.morning.taken) mDone++; }
-            if(m.slots.noon.required) { nTotal++; if(m.slots.noon.taken) nDone++; }
-            if(m.slots.evening.required) { eTotal++; if(m.slots.evening.taken) eDone++; }
-
-            const low = m.stock <= 5 ? 'stock-low' : '';
+        try {
+            const res = await fetch(API);
+            const meds = await res.json();
+            const container = document.getElementById('medList');
             
-            container.innerHTML += `
-                <div class="col-sm-6">
-                    <div class="card p-3 med-card">
-                        <h6 class="fw-bold mb-1">${m.name}</h6>
-                        <div class="small text-muted mb-2">${m.dosage} | ${m.food}</div>
-                        <div class="small mb-3">Stock: <span class="${low}">${m.stock}</span></div>
-                        
-                        <div class="row g-1">
-                            ${m.slots.morning.required ? `<div class="col"><button onclick="take(${m.id}, 'morning')" class="btn w-100 slot-btn ${m.slots.morning.taken ? 'btn-success' : 'btn-outline-warning'}" ${m.slots.morning.taken ? 'disabled' : ''}>MOR</button></div>` : ''}
-                            ${m.slots.noon.required ? `<div class="col"><button onclick="take(${m.id}, 'noon')" class="btn w-100 slot-btn ${m.slots.noon.taken ? 'btn-success' : 'btn-outline-info'}" ${m.slots.noon.taken ? 'disabled' : ''}>NOON</button></div>` : ''}
-                            ${m.slots.evening.required ? `<div class="col"><button onclick="take(${m.id}, 'evening')" class="btn w-100 slot-btn ${m.slots.evening.taken ? 'btn-success' : 'btn-outline-primary'}" ${m.slots.evening.taken ? 'disabled' : ''}>EVE</button></div>` : ''}
-                        </div>
-                        <div class="d-flex justify-content-between mt-3">
-                            <button onclick="refill(${m.id})" class="btn btn-sm btn-link p-0 text-decoration-none">Refill</button>
-                            <button onclick="deleteMed(${m.id})" class="btn btn-sm btn-link p-0 text-danger text-decoration-none">Delete</button>
-                        </div>
-                    </div>
-                </div>`;
-        });
+            let mTotal = 0, mDone = 0, nTotal = 0, nDone = 0, eTotal = 0, eDone = 0;
 
-        // Update bars
-        updateBar('bar-morning', mDone, mTotal);
-        updateBar('bar-noon', nDone, nTotal);
-        updateBar('bar-evening', eDone, eTotal);
+            container.innerHTML = meds.length === 0 ? '<p class="text-center text-muted">No medicines added.</p>' : '';
+
+            meds.forEach(m => {
+                if(m.slots.morning.required) { mTotal++; if(m.slots.morning.taken) mDone++; }
+                if(m.slots.noon.required) { nTotal++; if(m.slots.noon.taken) nDone++; }
+                if(m.slots.evening.required) { eTotal++; if(m.slots.evening.taken) eDone++; }
+
+                const low = m.stock <= 5 ? 'stock-low' : '';
+                
+                container.innerHTML += `
+                    <div class="col-sm-6">
+                        <div class="card p-3 med-card">
+                            <h6 class="fw-bold mb-1">${m.name}</h6>
+                            <div class="small text-muted mb-2">${m.dosage} | ${m.food}</div>
+                            <div class="small mb-3">Stock: <span class="${low}">${m.stock}</span></div>
+                            
+                            <div class="row g-1">
+                                ${m.slots.morning.required ? `<div class="col"><button onclick="take(${m.id}, 'morning')" class="btn w-100 slot-btn ${m.slots.morning.taken ? 'btn-success' : 'btn-outline-warning'}" ${m.slots.morning.taken ? 'disabled' : ''}>MOR</button></div>` : ''}
+                                ${m.slots.noon.required ? `<div class="col"><button onclick="take(${m.id}, 'noon')" class="btn w-100 slot-btn ${m.slots.noon.taken ? 'btn-success' : 'btn-outline-info'}" ${m.slots.noon.taken ? 'disabled' : ''}>NOON</button></div>` : ''}
+                                ${m.slots.evening.required ? `<div class="col"><button onclick="take(${m.id}, 'evening')" class="btn w-100 slot-btn ${m.slots.evening.taken ? 'btn-success' : 'btn-outline-primary'}" ${m.slots.evening.taken ? 'disabled' : ''}>EVE</button></div>` : ''}
+                            </div>
+                            <div class="d-flex justify-content-between mt-3">
+                                <button onclick="refill(${m.id})" class="btn btn-sm btn-link p-0 text-decoration-none">Refill</button>
+                                <button onclick="deleteMed(${m.id})" class="btn btn-sm btn-link p-0 text-danger text-decoration-none">Delete</button>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+
+            updateBar('bar-morning', mDone, mTotal);
+            updateBar('bar-noon', nDone, nTotal);
+            updateBar('bar-evening', eDone, eTotal);
+        } catch (err) {
+            console.error("Error loading meds:", err);
+        }
     }
 
     function updateBar(id, done, total) {
@@ -125,7 +128,7 @@
         const data = {
             name: document.getElementById('name').value,
             dosage: document.getElementById('dosage').value,
-            stock: document.getElementById('stock').value,
+            stock: parseInt(document.getElementById('stock').value),
             food: document.getElementById('food').value,
             slots: {
                 morning: document.getElementById('m-check').checked,
@@ -133,13 +136,13 @@
                 evening: document.getElementById('e-check').checked
             }
         };
-        await fetch('https://medtrak.onrender.com/medicines', { 
-   await fetch(API, { ... }); // Your existing add line
-loadMeds(); // This tells the app: "Okay, now go get the updated list"
-    method: 'POST', 
-    headers: {'Content-Type': 'application/json'}, 
-    body: JSON.stringify(data) 
-});
+
+        await fetch(API, { 
+            method: 'POST', 
+            headers: {'Content-Type': 'application/json'}, 
+            body: JSON.stringify(data) 
+        });
+
         document.getElementById('medForm').reset();
         loadMeds();
     };
@@ -153,7 +156,11 @@ loadMeds(); // This tells the app: "Okay, now go get the updated list"
     async function refill(id) {
         const amt = prompt("How many tablets to add?");
         if (!amt) return;
-        await fetch(`${API}/${id}/refill`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ amount: parseInt(amt) }) });
+        await fetch(`${API}/${id}/refill`, { 
+            method: 'POST', 
+            headers: {'Content-Type': 'application/json'}, 
+            body: JSON.stringify({ amount: parseInt(amt) }) 
+        });
         loadMeds();
     }
 
@@ -164,6 +171,7 @@ loadMeds(); // This tells the app: "Okay, now go get the updated list"
         }
     }
 
+    // Initial load
     loadMeds();
 </script>
 </body>
