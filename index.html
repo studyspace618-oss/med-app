@@ -61,14 +61,12 @@
                     <div id="bar-evening" class="progress-bar bg-primary border-end border-white" style="width: 33.4%; opacity: 0.2;">Night</div>
                 </div>
             </div>
-
             <div id="medList" class="row g-3"></div>
         </div>
     </div>
 </div>
 
 <script>
-    // 1. Corrected API URL (always use the /medicines path for your endpoints)
     const API = "https://medtrak.onrender.com/medicines";
 
     async function loadMeds() {
@@ -76,7 +74,6 @@
             const res = await fetch(API);
             const meds = await res.json();
             const container = document.getElementById('medList');
-            
             let mTotal = 0, mDone = 0, nTotal = 0, nDone = 0, eTotal = 0, eDone = 0;
 
             container.innerHTML = meds.length === 0 ? '<p class="text-center text-muted">No medicines added.</p>' : '';
@@ -87,14 +84,12 @@
                 if(m.slots.evening.required) { eTotal++; if(m.slots.evening.taken) eDone++; }
 
                 const low = m.stock <= 5 ? 'stock-low' : '';
-                
                 container.innerHTML += `
                     <div class="col-sm-6">
                         <div class="card p-3 med-card">
                             <h6 class="fw-bold mb-1">${m.name}</h6>
                             <div class="small text-muted mb-2">${m.dosage} | ${m.food}</div>
                             <div class="small mb-3">Stock: <span class="${low}">${m.stock}</span></div>
-                            
                             <div class="row g-1">
                                 ${m.slots.morning.required ? `<div class="col"><button onclick="take(${m.id}, 'morning')" class="btn w-100 slot-btn ${m.slots.morning.taken ? 'btn-success' : 'btn-outline-warning'}" ${m.slots.morning.taken ? 'disabled' : ''}>MOR</button></div>` : ''}
                                 ${m.slots.noon.required ? `<div class="col"><button onclick="take(${m.id}, 'noon')" class="btn w-100 slot-btn ${m.slots.noon.taken ? 'btn-success' : 'btn-outline-info'}" ${m.slots.noon.taken ? 'disabled' : ''}>NOON</button></div>` : ''}
@@ -111,9 +106,7 @@
             updateBar('bar-morning', mDone, mTotal);
             updateBar('bar-noon', nDone, nTotal);
             updateBar('bar-evening', eDone, eTotal);
-        } catch (err) {
-            console.error("Error loading meds:", err);
-        }
+        } catch (err) { console.error("Load Error:", err); }
     }
 
     function updateBar(id, done, total) {
@@ -136,13 +129,7 @@
                 evening: document.getElementById('e-check').checked
             }
         };
-
-        await fetch(API, { 
-            method: 'POST', 
-            headers: {'Content-Type': 'application/json'}, 
-            body: JSON.stringify(data) 
-        });
-
+        await fetch(API, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
         document.getElementById('medForm').reset();
         loadMeds();
     };
@@ -156,11 +143,7 @@
     async function refill(id) {
         const amt = prompt("How many tablets to add?");
         if (!amt) return;
-        await fetch(`${API}/${id}/refill`, { 
-            method: 'POST', 
-            headers: {'Content-Type': 'application/json'}, 
-            body: JSON.stringify({ amount: parseInt(amt) }) 
-        });
+        await fetch(`${API}/${id}/refill`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ amount: parseInt(amt) }) });
         loadMeds();
     }
 
@@ -171,7 +154,11 @@
         }
     }
 
-    // Initial load
+    // New day auto-refresh logic
+    document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") { loadMeds(); }
+    });
+
     loadMeds();
 </script>
 </body>
