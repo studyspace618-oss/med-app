@@ -134,7 +134,8 @@
             }
         };
         await fetch('https://medtrak.onrender.com/medicines', { 
-    location.reload(); // This forces the whole page to refresh and pull the new data
+   await fetch(API, { ... }); // Your existing add line
+loadMeds(); // This tells the app: "Okay, now go get the updated list"
     method: 'POST', 
     headers: {'Content-Type': 'application/json'}, 
     body: JSON.stringify(data) 
