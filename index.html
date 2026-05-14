@@ -71,7 +71,7 @@
     const API = "https://medtrak.onrender.com";
 
     async function loadMeds() {
-        const res = await fetch(API);
+       fetch('https://medtrak.onrender.com/medicines')
         const meds = await res.json();
         const container = document.getElementById('medList');
         
